@@ -2,7 +2,7 @@
 
 == Abstract ==
 
-'''foo''' is a template for a package, to make it easy to copy & modify.  It uses [[cabal-make]] for convenience.  It's even equipped with a darcs repo.  Copy the directory, "darcs mv" the .cabal file, edit README and wikipage.tw.  Then "darcs update" the changes and add new content with "make check-add" and "make add-new".
+'''foo''' is a template for a package, to make it easy to copy & modify.  It uses [[cabal-make]] for convenience.  It's even equipped with a darcs repo.  Copy the directory ("cp -rp"), "darcs mv" the .cabal file, edit README and wikipage.tw.  Then "darcs update" the changes and add new content with "make check-add" and "make add-new".
 
 Besides this wiki page, here are more ways to find out about foo:
 * Read [http://code.haskell.org/foo/doc/html/ the library documentation].

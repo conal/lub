@@ -1,9 +1,9 @@
 foo [1] is a template for a package, to make it easy to copy & modify.  It
 uses cabal-make [2] for convenience.  It's even equipped with a darcs
-repo.  Copy the directory, "darcs mv" the .cabal file, edit README and
-wikipage.tw.  Then "darcs update" the changes and add new content with
-"make check-add" and "make add-new".  When ready, do a "darcs put" or
-"make repo".
+repo.  Copy the directory ("cp -rp"), "darcs mv" the .cabal file, edit
+README and wikipage.tw.  Then "darcs update" the changes and add new
+content with "make check-add" and "make add-new".  When ready, do a "darcs
+put" or "make repo".
 
 Please share any comments & suggestions on the discussion (talk) page at
 [1].
