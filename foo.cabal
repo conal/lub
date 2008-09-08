@@ -1,15 +1,12 @@
-Name:                unamb
+Name:                foo
 Version:             0.0
 Cabal-Version:       >= 1.2
-Synopsis:            Unambiguous choice operator
-Category:            Concurrency, Data, Other
+Synopsis:            
+Category:            
 Description:
-  unamb contains the "unambiguous choice" operator "unamb", which
-  wraps thread racing up in a purely functional, semantically simple
-  wrapper.  Originally a part of Reactive, I moved unamb to its own
-  package in order to encourage experimentation.
+  What's it about?
   .
-  Project wiki page: <http://haskell.org/haskellwiki/unamb>
+  Project wiki page: <http://haskell.org/haskellwiki/foo>
   .
   The module documentation pages have links to colorized source code and
   to wiki pages where you can read and contribute user comments.  Enjoy!
@@ -17,8 +14,8 @@ Description:
   &#169; 2008 by Conal Elliott; BSD3 license.
 Author:              Conal Elliott 
 Maintainer:          conal@conal.net
-Homepage:            http://haskell.org/haskellwiki/unamb
-Package-Url:         http://code.haskell.org/unamb
+Homepage:            http://haskell.org/haskellwiki/foo
+Package-Url:         http://code.haskell.org/foo
 Copyright:           (c) 2008 by Conal Elliott
 License:             BSD3
 Stability:           experimental
@@ -29,7 +26,7 @@ Library
   Extensions:
   Build-Depends:       base
   Exposed-Modules:     
-                       Data.Unamb
+                       
   ghc-options:         -Wall
 
 --  ghc-prof-options:    -prof -auto-all 
