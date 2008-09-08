@@ -1,7 +1,7 @@
-foo [1] is a template for a package, to make it easy to copy & modify.  It
-uses cabal-make [2] for convenience.  It's even equipped with a darcs
-repo.  Copy the directory ("cp -rp"), "darcs mv" the .cabal file, edit
-README and wikipage.tw.  Then "darcs update" the changes and add new
+project-foo [1] is a template for a package, to make it easy to copy &
+modify.  It uses cabal-make [2] for convenience.  It's even equipped with
+a darcs repo.  Copy the directory ("cp -rp"), "darcs mv" the .cabal file,
+edit README and wikipage.tw.  Then "darcs update" the changes and add new
 content with "make check-add" and "make add-new".  When ready, do a "darcs
 put" or "make repo".
 
@@ -17,5 +17,5 @@ commands.
 
 References:
 
-[1] http://haskell.org/haskellwiki/foo
+[1] http://haskell.org/haskellwiki/project-foo
 [1] http://haskell.org/haskellwiki/cabal-make
