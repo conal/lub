@@ -1,1 +1,1 @@
-include ../conal-cabal-make.inc
+include ../my-cabal-make.inc
