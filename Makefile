@@ -1,1 +1,1 @@
-include ../my-cabal-make.inc
+include ../cho-cabal-make.inc

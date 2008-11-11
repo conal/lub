@@ -5,9 +5,9 @@
 '''project-foo''' is a template for a package, to make it easy to copy & modify.  It uses [[cabal-make]] for convenience.  It's even equipped with a darcs repo.  Copy the directory ("cp -rp"), "darcs mv" the .cabal file, edit README and wikipage.tw.  Then "darcs update" the changes and add new content with "make check-add" and "make add-new".
 
 Besides this wiki page, here are more ways to find out about project-foo:
-* Peruse [http://code.haskell.org/project-foo/doc/html/ the library documentation].
-* Download the code repository: '''<tt>darcs get http://code.haskell.org/project-foo</tt>'''.
-* Install [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/project-foo from Hackage].
-* See the [[project-foo/Versions| version history]].
+* Visit the [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/project-foo Hackage page] for library documentation and to download & install.
+* Or install with <tt>cabal install project-foo</tt>.
+* Get the code repository: <tt>darcs get http://code.haskell.org/project-foo</tt>.
+<!-- * See the [[project-foo/Versions| version history]]. -->
 
 Please leave comments at the [[Talk:project-foo|Talk page]].
