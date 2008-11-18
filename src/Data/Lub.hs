@@ -14,7 +14,9 @@
 ----------------------------------------------------------------------
 
 module Data.Lub
-  ( HasLub, bottom, flatLub
+  ( 
+  -- * Least upper bounds
+    HasLub(..), bottom, flatLub
   -- * Some useful special applications of 'lub'
   , parCommute, por, pand, ptimes
   ) where
@@ -23,11 +25,11 @@ import Data.Unamb
 
 import Data.Repr
 
--- | Types for which we know how to merge information.
+-- | Types that support information merging ('lub')
 class HasLub a where
   -- | Least upper information bound.  Combines information available from
   -- each argument.  The arguments must be consistent, i.e., must have a
-  -- common upper information bound.
+  -- common upper bound.
   lub :: a -> a -> a
 
 instance HasLub ()   where _ `lub` _ = ()
@@ -131,7 +133,8 @@ Left () `lub` bottom :: Either () Bool
 --------------------------------------------------------------------}
 
 -- | Turn a binary commutative operation into that tries both orders in
--- parallel, 'lub'-merging the results.
+-- parallel, 'lub'-merging the results.  Useful when there are special
+-- cases that don't require evaluating both arguments.
 parCommute :: HasLub a => (a -> a -> a) -> (a -> a -> a)
 parCommute op a b = (a `op` b) `lub` (b `op` a)
 
