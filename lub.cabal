@@ -1,8 +1,8 @@
 Name:                lub
 Version:             0.0.0
 Cabal-Version:       >= 1.2
-Synopsis:            
-Category:            
+Synopsis:            least upper bounds -- information merging
+Category:            Concurrency, Data, Other
 Description:
   Lub is an experiment in computing least upper information bounds on
   (partially defined) functional values.  It provides a 'lub' function
