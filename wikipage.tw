@@ -2,12 +2,14 @@
 
 == Abstract ==
 
-'''project-foo''' is a template for a package, to make it easy to copy & modify.  It uses [[cabal-make]] for convenience.  It's even equipped with a darcs repo.  Copy the directory ("cp -rp"), "darcs mv" the .cabal file, edit README and wikipage.tw.  Then "darcs update" the changes and add new content with "make check-add" and "make add-new".
+Lub is an experiment in computing least upper information bounds on (partially defined) functional values.
+It provides a <hask>lub</hask> function that is consistent with the <hask>unamb</hask> operator but has a more liberal precondition.
+Where <hask>unamb</hask> requires its arguments to equal when neither is bottom, <hask>lub</hask> is able to synthesize a value from the partial information contained in both of its arguments.
 
-Besides this wiki page, here are more ways to find out about project-foo:
-* Visit the [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/project-foo Hackage page] for library documentation and to download & install.
-* Or install with <tt>cabal install project-foo</tt>.
-* Get the code repository: <tt>darcs get http://code.haskell.org/project-foo</tt>.
-<!-- * See the [[project-foo/Versions| version history]]. -->
+Besides this wiki page, here are more ways to find out about lub:
+* Visit the [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/lub Hackage page] for library documentation and to download & install.
+* Or install with <tt>cabal install lub</tt>.
+* Get the code repository: <tt>darcs get http://code.haskell.org/lub</tt>.
+<!-- * See the [[lub/Versions| version history]]. -->
 
-Please leave comments at the [[Talk:project-foo|Talk page]].
+Please leave comments at the [[Talk:lub|Talk page]].
