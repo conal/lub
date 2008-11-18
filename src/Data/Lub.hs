@@ -9,67 +9,79 @@
 -- Maintainer  :  conal@conal.net
 -- Stability   :  experimental
 -- 
--- Compute least upper bounds (lub / join) of two values
+-- Compute least upper bound ('lub') of two values, with respect to
+-- information content.  I.e., merge the information available in each.
 ----------------------------------------------------------------------
 
 module Data.Lub
-  ( HasLub, bottom
+  ( HasLub, bottom, flatLub
   -- * Some useful special applications of 'lub'
   , parCommute, por, pand, ptimes
   ) where
 
 import Data.Unamb
 
-import Data.AssocView
+import Data.Repr
 
-class HasLub a where lub :: a -> a -> a
+-- | Types for which we know how to merge information.
+class HasLub a where
+  -- | Least upper information bound.  Combines information available from
+  -- each argument.  The arguments must be consistent, i.e., must have a
+  -- common upper information bound.
+  lub :: a -> a -> a
 
 instance HasLub ()   where _ `lub` _ = ()
 
--- | A 'lub' for flat domains.  Equivalent to 'unamb'.
-lub0 :: a -> a -> a
-lub0 = unamb
+-- | A 'lub' for flat domains.  Equivalent to 'unamb'.  Handy for defining
+-- 'HasLub' instances, e.g.,
+-- 
+-- @
+--   instance HasLub Integer where lub = flatLub
+-- @
+
+flatLub :: a -> a -> a
+flatLub = unamb
 
 -- Flat types:
-instance HasLub Bool    where lub = lub0
-instance HasLub Char    where lub = lub0
-instance HasLub Int     where lub = lub0
-instance HasLub Integer where lub = lub0
-instance HasLub Float   where lub = lub0
-instance HasLub Double  where lub = lub0
+instance HasLub Bool    where lub = flatLub
+instance HasLub Char    where lub = flatLub
+instance HasLub Int     where lub = flatLub
+instance HasLub Integer where lub = flatLub
+instance HasLub Float   where lub = flatLub
+instance HasLub Double  where lub = flatLub
 -- ...
 
+
 -- Lub on pairs
-pairLub :: (HasLub a, HasLub b) =>
-           (a,b) -> (a,b) -> (a,b)
+-- pairLub :: (HasLub a, HasLub b) =>
+--            (a,b) -> (a,b) -> (a,b)
 
--- p `pairLub` p' = (a `lub` a', b `lub` b')
---   where
---     ~(a ,b ) = p
---     ~(a',b') = p'
+-- Too strict.  Bottom if one pair is bottom
+-- 
+-- (a,b) `pairLub` (a',b') = (a `lub` a', b `lub` b')
 
+-- Too lazy.  Non-bottom even if both pairs are bottom
+-- 
 -- ~(a,b) `pairLub` ~(a',b') = (a `lub` a', b `lub` b')
 
--- Too lazy.  Makes bottom be more defined.  Can it be fixed?
-
-p `pairLub` p' = (p `unamb` p') `seq`
-                 (a `lub` a', b `lub` b')
-  where
-    ~(a ,b ) = p
-    ~(a',b') = p'
-
--- p `pairLub` p' = assuming (isP p `por` isP p')
---                    (a `lub` a', b `lub` b')
---   where
---     ~(a ,b ) = p
---     ~(a',b') = p'
-
--- isP :: (a,b) -> Bool
--- isP (_,_) = True
+-- Probably correct, but more clever than necessary, and less efficient.
+-- 
+--   p `pairLub` p' = assuming (isP p `por` isP p')
+--                      (a `lub` a', b `lub` b')
+--     where
+--       ~(a ,b ) = p
+--       ~(a',b') = p'
+--   
+--   isP :: (a,b) -> Bool
+--   isP (_,_) = True
 
 
 instance (HasLub a, HasLub b) => HasLub (a,b) where
-  lub = pairLub
+  p `lub` p' = (p `unamb` p') `seq`
+                   (a `lub` a', b `lub` b')
+    where
+      ~(a ,b ) = p
+      ~(a',b') = p'
 
 instance (HasLub a, HasLub b) => HasLub (Either a b) where
   u `lub` v = if isL u `unamb` isL v then
@@ -87,16 +99,16 @@ outR :: Either a b -> b
 outR = either (error "outR on Left") id
 
 -- Generic case
---   instance (HasView t, HasLub (View t)) => HasLub t where lub = vlub
+--   instance (HasRepr t v, HasLub v) => HasLub t where lub = repLub
 
 -- For instance,
-instance HasLub a => HasLub (Maybe a) where lub = vlub
-instance HasLub a => HasLub [a]       where lub = vlub
+instance HasLub a => HasLub (Maybe a) where lub = repLub
+instance HasLub a => HasLub [a]       where lub = repLub
 
 
--- 'lub' on views
-vlub :: (HasView a, HasLub (View a)) => a -> a -> a
-vlub = onView2 lub
+-- 'lub' on representations
+repLub :: (HasRepr a v, HasLub v) => a -> a -> a
+repLub = onRepr2 lub
 
 
 {-
@@ -162,3 +174,4 @@ ptimes = parCommute times
 bottom `ptimes` 0 :: Integer
 
 -}
+
