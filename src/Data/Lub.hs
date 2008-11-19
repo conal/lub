@@ -21,6 +21,8 @@ module Data.Lub
   , parCommute, por, pand, ptimes
   ) where
 
+import Control.Applicative (liftA2)
+
 import Data.Unamb
 
 import Data.Repr
@@ -84,6 +86,10 @@ instance (HasLub a, HasLub b) => HasLub (a,b) where
     where
       ~(a ,b ) = p
       ~(a',b') = p'
+
+instance HasLub b => HasLub (a -> b) where
+  lub = liftA2 lub
+
 
 instance (HasLub a, HasLub b) => HasLub (Either a b) where
   u `lub` v = if isL u `unamb` isL v then
