@@ -11,6 +11,8 @@
 -- 
 -- Compute least upper bound ('lub') of two values, with respect to
 -- information content.  I.e., merge the information available in each.
+-- For flat types (in which all values are either bottom or fully
+-- defined), 'lub' is equivalent to 'unamb'.
 ----------------------------------------------------------------------
 
 module Data.Lub
@@ -18,12 +20,13 @@ module Data.Lub
   -- * Least upper bounds
     HasLub(..), bottom, flatLub
   -- * Some useful special applications of 'lub'
-  , parCommute, por, pand, ptimes
+  , parCommute, pand, por, ptimes
   ) where
 
 import Control.Applicative (liftA2)
 
-import Data.Unamb
+import Data.Unamb hiding (parCommute)
+import qualified Data.Unamb as Unamb
 
 import Data.Repr
 
@@ -42,7 +45,6 @@ instance HasLub ()   where _ `lub` _ = ()
 -- @
 --   instance HasLub Integer where lub = flatLub
 -- @
-
 flatLub :: a -> a -> a
 flatLub = unamb
 
@@ -133,24 +135,13 @@ Left () `lub` bottom :: Either () Bool
 
 -}
 
-
-{--------------------------------------------------------------------
-    Some useful special applications of 'unamb'
---------------------------------------------------------------------}
-
 -- | Turn a binary commutative operation into that tries both orders in
 -- parallel, 'lub'-merging the results.  Useful when there are special
 -- cases that don't require evaluating both arguments.
-parCommute :: HasLub a => (a -> a -> a) -> (a -> a -> a)
-parCommute op a b = (a `op` b) `lub` (b `op` a)
-
--- | Parallel or
-por :: Bool -> Bool -> Bool
-por = parCommute (||)
-
--- | Parallel and
-pand :: Bool -> Bool -> Bool
-pand = parCommute (&&)
+-- 
+-- Similar to 'Unamb.parCommute', but uses 'lub' instead of 'unamb'.
+parCommute :: HasLub b => (a -> a -> b) -> (a -> a -> b)
+parCommute op x y = (x `op` y) `lub` (y `op` x)
 
 -- | Multiplication optimized for either argument being zero or one, where
 -- the other might be expensive/delayed.
@@ -183,4 +174,3 @@ ptimes = parCommute times
 bottom `ptimes` 0 :: Integer
 
 -}
-
