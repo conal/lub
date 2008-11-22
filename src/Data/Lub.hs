@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts #-}
+-- {-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances #-}
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -18,7 +19,7 @@
 module Data.Lub
   ( 
   -- * Least upper bounds
-    HasLub(..), bottom, flatLub
+    HasLub(..), flatLub
   -- * Some useful special applications of 'lub'
   , parCommute, pand, por, ptimes
   ) where
@@ -37,7 +38,9 @@ class HasLub a where
   -- common upper bound.
   lub :: a -> a -> a
 
-instance HasLub ()   where _ `lub` _ = ()
+-- The following instance is wrong, since it lubs two undefineds to ().
+-- 
+-- instance HasLub () where _ `lub` _ = ()
 
 -- | A 'lub' for flat domains.  Equivalent to 'unamb'.  Handy for defining
 -- 'HasLub' instances, e.g.,
@@ -49,6 +52,7 @@ flatLub :: a -> a -> a
 flatLub = unamb
 
 -- Flat types:
+instance HasLub ()      where lub = flatLub
 instance HasLub Bool    where lub = flatLub
 instance HasLub Char    where lub = flatLub
 instance HasLub Int     where lub = flatLub
@@ -63,41 +67,33 @@ instance HasLub Double  where lub = flatLub
 --            (a,b) -> (a,b) -> (a,b)
 
 -- Too strict.  Bottom if one pair is bottom
--- 
--- (a,b) `pairLub` (a',b') = (a `lub` a', b `lub` b')
+
+-- instance (HasLub a, HasLub b) => HasLub (a,b) where
+--   (a,b) `lub` (a',b') = (a `lub` a', b `lub` b')
 
 -- Too lazy.  Non-bottom even if both pairs are bottom
--- 
--- ~(a,b) `pairLub` ~(a',b') = (a `lub` a', b `lub` b')
 
--- Probably correct, but more clever than necessary, and less efficient.
--- 
---   p `pairLub` p' = assuming (isP p `por` isP p')
---                      (a `lub` a', b `lub` b')
---     where
---       ~(a ,b ) = p
---       ~(a',b') = p'
---   
---   isP :: (a,b) -> Bool
---   isP (_,_) = True
+-- instance (HasLub a, HasLub b) => HasLub (a,b) where
+--   ~(a,b) `lub` ~(a',b') = (a `lub` a', b `lub` b')
 
 
 instance (HasLub a, HasLub b) => HasLub (a,b) where
-  p `lub` p' = (p `unamb` p') `seq`
-                   (a `lub` a', b `lub` b')
-    where
-      ~(a ,b ) = p
-      ~(a',b') = p'
+  ~p@(a,b) `lub` ~p'@(a',b') =
+     (definedP p `unamb` definedP p') `seq` (a `lub` a', b `lub` b')
+
+definedP :: (a,b) -> Bool
+definedP (_,_) = True
 
 instance HasLub b => HasLub (a -> b) where
   lub = liftA2 lub
 
+-- f `lub` g = \ a -> f a `lub` g a
 
 instance (HasLub a, HasLub b) => HasLub (Either a b) where
-  u `lub` v = if isL u `unamb` isL v then
-                Left  (outL u `lub` outL v)
-              else
-                Right (outR u `lub` outR v)
+  s `lub` s' = if isL s `unamb` isL s' then
+                 Left  (outL s `lub` outL s')
+               else
+                 Right (outR s `lub` outR s')
 
 isL :: Either a b -> Bool
 isL = either (const True) (const False)
@@ -111,27 +107,32 @@ outR = either (error "outR on Left") id
 -- Generic case
 --   instance (HasRepr t v, HasLub v) => HasLub t where lub = repLub
 
+-- 'lub' on representations
+repLub :: (HasRepr a v, HasLub v) => a -> a -> a
+repLub = onRepr2 lub
+
+-- instance (HasRepr t v, HasLub v) => HasLub t where
+--   lub = repLub
+
 -- For instance,
 instance HasLub a => HasLub (Maybe a) where lub = repLub
 instance HasLub a => HasLub [a]       where lub = repLub
 
 
--- 'lub' on representations
-repLub :: (HasRepr a v, HasLub v) => a -> a -> a
-repLub = onRepr2 lub
+
+-- a `repLub` a' = unrepr (repr a `lub` repr a')
 
 
-{-
 
--- Examples:
+{-  -- Examples:
 
-(bottom,False) `lub` (True,bottom)
+(undefined,False) `lub` (True,undefined)
 
-(bottom,(bottom,False)) `lub` ((),(bottom,bottom)) `lub` (bottom,(True,bottom))
+(undefined,(undefined,False)) `lub` ((),(undefined,undefined)) `lub` (undefined,(True,undefined))
 
-Left () `lub` bottom :: Either () Bool
+Left () `lub` undefined :: Either () Bool
 
-[1,bottom,2] `lub` [bottom,3,2]
+[1,undefined,2] `lub` [undefined,3,2]
 
 -}
 
@@ -164,13 +165,10 @@ ptimes = parCommute times
 --    a `plus` b = a+b
 
 
-{-
+{-  -- Examples:
 
--- Examples:
-
-0     *    bottom :: Integer
-0 `ptimes` bottom :: Integer
-
-bottom `ptimes` 0 :: Integer
+0     *    undefined :: Integer
+0 `ptimes` undefined :: Integer
+undefined `ptimes` 0 :: Integer
 
 -}

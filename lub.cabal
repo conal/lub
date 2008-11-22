@@ -1,5 +1,5 @@
 Name:                lub
-Version:             0.0.3
+Version:             0.0.4
 Cabal-Version:       >= 1.2
 Synopsis:            least upper bounds -- information merging
 Category:            Concurrency, Data, Other
@@ -26,7 +26,7 @@ build-type:          Simple
 Library
   hs-Source-Dirs:      src
   Extensions:
-  Build-Depends:       base, unamb >= 0.1.2
+  Build-Depends:       base, unamb >= 0.1.3
   Exposed-Modules:     
                        Data.Repr
                        Data.Lub
