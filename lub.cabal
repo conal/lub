@@ -1,5 +1,5 @@
 Name:                lub
-Version:             0.0.4
+Version:             0.0.5
 Cabal-Version:       >= 1.2
 Synopsis:            least upper bounds -- information merging
 Category:            Concurrency, Data, Other

@@ -21,7 +21,7 @@ module Data.Lub
   -- * Least upper bounds
     HasLub(..), flatLub
   -- * Some useful special applications of 'lub'
-  , parCommute, pand, por, ptimes
+  , parCommute, ptimes
   ) where
 
 import Control.Applicative (liftA2)
@@ -36,7 +36,10 @@ class HasLub a where
   -- | Least upper information bound.  Combines information available from
   -- each argument.  The arguments must be consistent, i.e., must have a
   -- common upper bound.
-  lub :: a -> a -> a
+  lub  :: a -> a -> a
+  -- | n-ary 'lub'.  Defaults to @foldr lub undefined@
+  lubs :: [a] -> a
+  lubs = foldr lub undefined
 
 -- The following instance is wrong, since it lubs two undefineds to ().
 -- 

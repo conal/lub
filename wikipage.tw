@@ -1,17 +1,18 @@
 [[Category:Packages]]
+[[Category:Concurrency]]
 
 == Abstract ==
 
 Lub is an experiment in computing least upper information bounds on (partially defined) functional values.
-It provides a <hask>lub</hask> function that is consistent with the <hask>unamb</hask> operator but has a more liberal precondition.
-Where <hask>unamb</hask> requires its arguments to equal when neither is bottom, <hask>lub</hask> is able to synthesize a value from the partial information contained in both of its arguments.
+It provides a <hask>lub</hask> function that is consistent with the [[unamb]] operator but has a more liberal precondition.
+Where <hask>unamb</hask> requires its arguments to equal when neither is bottom, <hask>lub</hask> is able to synthesize a value from the partial information contained in both of its arguments, which is useful with non-flat types.
 
 Besides this wiki page, here are more ways to find out about lub:
+* Read the blog post ''[http://conal.net/blog/posts/merging-partial-values/ Merging partial values]''
 * Visit the [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/lub Hackage page] for library documentation and to download & install.
 * Or install with <tt>cabal install lub</tt>.
 * Get the code repository: <tt>darcs get http://code.haskell.org/lub</tt>.
 <!-- * See the [[lub/Versions| version history]]. -->
-
-Please leave comments at the [[Talk:lub|Talk page]].
+<!-- Please leave comments at the [[Talk:lub|Talk page]]. -->
 
 I got inspired for this package after [http://tunes.org/~nef/logs/haskell/08.11.17 stimulating discussions] with Thomas Davie, Russell O'Connor others in the #haskell gang.
