@@ -174,4 +174,17 @@ ptimes = parCommute times
 0 `ptimes` undefined :: Integer
 undefined `ptimes` 0 :: Integer
 
+zip' :: (HasLub a, HasLub b) => [a] -> [b] -> [(a,b)]
+zip' = lubs [p1,p2,p3]
+ where
+   p1 []     _      = []
+   p2 _      []     = []
+   p3 (x:xs) (y:ys) = (x,y) : zip' xs ys
+
+zip' [] (error "boom") :: [(Int,Int)]
+zip' (error "boom") [] :: [(Int,Int)]
+
+zip' [10,20] (1 : 2 : error "boom")
+zip' (1 : 2 : error "boom") [10,20]
+
 -}
