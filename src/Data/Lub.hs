@@ -27,7 +27,7 @@ module Data.Lub
 import Control.Applicative (liftA2)
 
 import Data.Unamb hiding (parCommute)
-import qualified Data.Unamb as Unamb
+-- import qualified Data.Unamb as Unamb
 
 import Data.Repr
 
@@ -143,7 +143,7 @@ Left () `lub` undefined :: Either () Bool
 -- parallel, 'lub'-merging the results.  Useful when there are special
 -- cases that don't require evaluating both arguments.
 -- 
--- Similar to 'Unamb.parCommute', but uses 'lub' instead of 'unamb'.
+-- Similar to parCommute from Unamb, but uses 'lub' instead of 'unamb'.
 parCommute :: HasLub b => (a -> a -> b) -> (a -> a -> b)
 parCommute op x y = (x `op` y) `lub` (y `op` x)
 
