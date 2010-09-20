@@ -4,7 +4,7 @@
 -- |
 -- Module      :  Data.Glb
 -- Copyright   :  (c) Conal Elliott 2010
--- License     :  GPL-3
+-- License     :  BSD3
 -- 
 -- Maintainer  :  conal@conal.net
 -- Stability   :  experimental
@@ -89,3 +89,4 @@ t5 :: [Int]
 t5 = [2,3,5] `glb` [1,3]  -- _|_:3:_|_
 
 -}
+

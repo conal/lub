@@ -33,6 +33,7 @@ Library
                        Data.Repr
                        Data.Lub
                        Data.Glb
+                       Data.Lazier
                        
   ghc-options:         -Wall
 
