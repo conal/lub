@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
--- Module      :  Data.Lazier
+-- Module      :  Data.Laxer
 -- Copyright   :  (c) Conal Elliott 2010
 -- License     :  BSD3
 -- 
@@ -13,7 +13,7 @@
 -- See <http://conal.net/blog/posts/lazier-functional-programming-part-2/>
 ----------------------------------------------------------------------
 
-module Data.Lazier (eitherL,condL) where
+module Data.Laxer (eitherL,condL) where
 
 import Data.Lub
 import Data.Glb

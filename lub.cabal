@@ -1,5 +1,5 @@
 Name:                lub
-Version:             0.1.1
+Version:             0.1.2
 Cabal-Version:       >= 1.2
 Synopsis:            information operators: least upper bound (lub) and greatest lower bound (glb)
 Category:            Concurrency, Data, Other
@@ -33,7 +33,7 @@ Library
                        Data.Repr
                        Data.Lub
                        Data.Glb
-                       Data.Lazier
+                       Data.Laxer
                        
   ghc-options:         -Wall
 
