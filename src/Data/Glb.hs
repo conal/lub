@@ -23,9 +23,10 @@ class HasGlb a where
   -- | Greatest lower information bound.  Intersects information available
   -- from each argument.
   glb  :: a -> a -> a
-  -- | n-ary 'lub'.  Defaults to @foldr lub undefined@
-  glbs :: [a] -> a
-  glbs = foldr glb undefined
+  -- | n-ary 'glb' for n > 0.  Defaults to @foldr1 glb@.  Unlike @lub@, we
+  -- have no unit for 'glb'.
+  glbs1 :: [a] -> a
+  glbs1 = foldr1 glb
 
 -- | Bottom for a 'glb'.  In the form of @error \"glb: bottom (\<reason\>)\"@,
 -- though not really an error.
@@ -57,7 +58,7 @@ instance HasGlb b => HasGlb (a -> b) where
 instance (HasGlb a, HasGlb b) => HasGlb (Either a b) where
   Left  a `glb` Left  a' = Left  (a `glb` a')
   Right b `glb` Right b' = Right (b `glb` b')
-  _ `glb` _ = glbBottom "glb: bottom (Left/Right mismatch)"
+  _ `glb` _ = glbBottom "bottom (Left/Right mismatch)"
 
 
 -- 'glb' on representations

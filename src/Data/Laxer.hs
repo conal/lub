@@ -9,7 +9,7 @@
 -- Maintainer  :  conal@conal.net
 -- Stability   :  experimental
 -- 
--- Some lazier operations.
+-- Some laxer operations.
 -- See <http://conal.net/blog/posts/lazier-functional-programming-part-2/>
 ----------------------------------------------------------------------
 
