@@ -18,10 +18,12 @@ module Data.Laxer (eitherL,condL) where
 import Data.Lub
 import Data.Glb
 
+-- | Laxer if-then-else, due to Luke Palmer
 condL :: (HasLub a, HasGlb a) =>
          a -> a -> Bool -> a
 condL a b = const (a `glb` b) `lub` (\ c -> if c then a else b)
 
+-- | Laxer variant of 'either'
 eitherL :: (HasLub c, HasGlb c) =>
            (a -> c) -> (b -> c) -> (Either a b -> c)
 eitherL f g = const (f undefined `glb` g undefined) `lub` either f g
