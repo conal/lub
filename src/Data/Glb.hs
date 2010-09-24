@@ -58,7 +58,7 @@ instance HasGlb b => HasGlb (a -> b) where
 instance (HasGlb a, HasGlb b) => HasGlb (Either a b) where
   Left  a `glb` Left  a' = Left  (a `glb` a')
   Right b `glb` Right b' = Right (b `glb` b')
-  _ `glb` _ = glbBottom "bottom (Left/Right mismatch)"
+  _ `glb` _ = glbBottom "Left/Right mismatch"
 
 
 -- 'glb' on representations
