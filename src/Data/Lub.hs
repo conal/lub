@@ -149,7 +149,7 @@ parCommute op x y = (x `op` y) `lub` (y `op` x)
 
 -- | Multiplication optimized for either argument being zero or one, where
 -- the other might be expensive/delayed.
-ptimes :: (HasLub a, Num a) => a -> a -> a
+ptimes :: (HasLub a, Eq a, Num a) => a -> a -> a
 ptimes = parCommute times
  where
    0 `times` _ = 0
