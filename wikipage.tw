@@ -11,7 +11,7 @@ Besides this wiki page, here are more ways to find out about lub:
 * Read the blog post ''[http://conal.net/blog/posts/merging-partial-values/ Merging partial values]''
 * Visit the [http://hackage.haskell.org/cgi-bin/hackage-scripts/package/lub Hackage page] for library documentation and to download & install.
 * Or install with <tt>cabal install lub</tt>.
-* Get the code repository: <tt>darcs get http://code.haskell.org/lub</tt>.
+* Get the [https://github.com/conal/lub code repository].
 <!-- * See the [[lub/Versions| version history]]. -->
 <!-- Please leave comments at the [[Talk:lub|Talk page]]. -->
 
