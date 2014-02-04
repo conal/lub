@@ -1,6 +1,6 @@
 Name:                lub
-Version:             0.1.7
-Cabal-Version:       >= 1.2
+Version:             0.1.8
+Cabal-Version:       >= 1.6
 Synopsis:            information operators: least upper bound (lub) and greatest lower bound (glb)
 Category:            Concurrency, Data, Other
 Description:
@@ -15,15 +15,19 @@ Description:
   .
   Project wiki page: <http://haskell.org/haskellwiki/lub>
   .
-  &#169; 2008 by Conal Elliott; BSD3 license.
+  &#169; 2008-2014 by Conal Elliott; BSD3 license.
 Author:              Conal Elliott 
 Maintainer:          conal@conal.net
 Homepage:            http://haskell.org/haskellwiki/lub
 Package-Url:         http://code.haskell.org/~conal/code/lub
-Copyright:           (c) 2008,2009,2010 by Conal Elliott
+Copyright:           (c) 2008-2014 by Conal Elliott
 License:             BSD3
 Stability:           experimental
 build-type:          Simple
+
+source-repository head
+  type:     git
+  location: git://github.com/conal/lub.git
 
 Library
   hs-Source-Dirs:      src
