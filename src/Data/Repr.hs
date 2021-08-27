@@ -16,7 +16,8 @@
 -- This version uses associated types for HasRepr
 ----------------------------------------------------------------------
 
-module Data.Repr (HasRepr(..), onRepr, onRepr2) where
+module Data.Repr {-# DEPRECATED "Use generics instead" #-}
+  (HasRepr(..), onRepr, onRepr2) where
 
 -- Reprs.  TODO: find & use a simple, standard generic programming framework.
 

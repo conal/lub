@@ -175,6 +175,10 @@ zip' (1 : 2 : error "boom") [10,20]
 
 -- | Used for generic deriving of 'HasLub'
 class GHasLub f where
+  -- Yes, this is an unusual type for the method of a class of Generic
+  -- representations. But we need to make decisions about what we do with `a`
+  -- itself based on what its representation looks like, and this seems
+  -- to be the simplest way to achieve that by far.
   glub :: (Generic a, Rep a ~ f) => a -> a -> a
 
 -- | A suitable definition of 'lub' for instances of 'Generic'.
