@@ -9,6 +9,7 @@
 {-# LANGUAGE TypeOperators #-}
 #if __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE PolyKinds #-}
 #endif
 
 {-# OPTIONS_GHC -Wall #-}
@@ -29,10 +30,14 @@ module Data.Glb (HasGlb(..),glbBottom,flatGlb
   , genericGlb
   ) where
 
-import Control.Applicative (liftA2, Const)
+import Control.Applicative (liftA2, Const, ZipList)
 
 import GHC.Generics
-
+import qualified Data.Typeable as Typeable
+#if MIN_VERSION_base(4,7,0)
+import Data.Type.Equality ((:~:))
+import qualified Data.Proxy as Proxy
+#endif
 #if MIN_VERSION_base(4,8,0)
 import qualified Data.Functor.Identity as Identity
 import qualified Data.Void as Void
@@ -41,6 +46,10 @@ import qualified Data.Void as Void
 import qualified Data.Functor.Compose as Compose
 import qualified Data.Functor.Product as Product
 import qualified Data.Functor.Sum as Sum
+#endif
+#if MIN_VERSION_base(4,10,0)
+import Data.Type.Equality ((:~~:))
+import qualified Type.Reflection as TR
 #endif
 
 
@@ -74,14 +83,28 @@ instance HasGlb Int     where glb = flatGlb
 instance HasGlb Integer where glb = flatGlb
 instance HasGlb Float   where glb = flatGlb
 instance HasGlb Double  where glb = flatGlb
+instance HasGlb Typeable.TypeRep where glb = flatGlb
+#if MIN_VERSION_base(4,7,0)
+instance HasGlb (a :~: b) where glb = flatGlb
+#endif
+#if MIN_VERSION_base(4,10,0)
+instance HasGlb (a :~~: b) where glb = flatGlb
+instance HasGlb (TR.TypeRep a) where glb = flatGlb
+#endif
+
 -- ...
 
 -- Generic-derived instances
 instance HasGlb ()
+#if MIN_VERSION_base(4,7,0)
+instance HasGlb (Proxy.Proxy a)
+#endif
 instance HasGlb Bool
+instance HasGlb Ordering
 instance (HasGlb a, HasGlb b) => HasGlb (Either a b)
 instance HasGlb a => HasGlb (Maybe a)
 instance HasGlb a => HasGlb [a]
+instance HasGlb a => HasGlb (ZipList a)
 
 instance (HasGlb a, HasGlb b) => HasGlb (a, b)
 instance (HasGlb a, HasGlb b, HasGlb c) => HasGlb (a, b, c)

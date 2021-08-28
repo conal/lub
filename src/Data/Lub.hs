@@ -9,6 +9,7 @@
 {-# LANGUAGE TypeOperators #-}
 #if __GLASGOW_HASKELL__ >= 708
 {-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE PolyKinds #-} -- For instances
 #endif
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
@@ -37,12 +38,17 @@ module Data.Lub
   , genericLub
   ) where
 
-import Control.Applicative (liftA2, Const)
+import Control.Applicative (liftA2, Const, ZipList)
 
 import Data.Unamb hiding (parCommute)
 -- import qualified Data.Unamb as Unamb
 
 import GHC.Generics
+import qualified Data.Typeable as Typeable
+#if MIN_VERSION_base(4,7,0)
+import Data.Type.Equality ((:~:))
+import qualified Data.Proxy as Proxy
+#endif
 #if MIN_VERSION_base(4,8,0)
 import qualified Data.Functor.Identity as Identity
 import qualified Data.Void as Void
@@ -51,6 +57,10 @@ import qualified Data.Void as Void
 import qualified Data.Functor.Compose as Compose
 import qualified Data.Functor.Product as Product
 import qualified Data.Functor.Sum as Sum
+#endif
+#if MIN_VERSION_base(4,10,0)
+import Data.Type.Equality ((:~~:))
+import qualified Type.Reflection as TR
 #endif
 
 -- | Types that support information merging ('lub')
@@ -80,14 +90,27 @@ instance HasLub Int     where lub = flatLub
 instance HasLub Integer where lub = flatLub
 instance HasLub Float   where lub = flatLub
 instance HasLub Double  where lub = flatLub
+#if MIN_VERSION_base(4,7,0)
+instance HasLub (a :~: b) where lub = flatLub
+#endif
+#if MIN_VERSION_base(4,10,0)
+instance HasLub (a :~~: b) where lub = flatLub
+instance HasLub (TR.TypeRep a) where lub = flatLub
+#endif
+instance HasLub Typeable.TypeRep where lub = flatLub
 -- ...
 
 -- Generic-derived types:
 instance HasLub ()
+#if MIN_VERSION_base(4,7,0)
+instance HasLub (Proxy.Proxy t)
+#endif
 instance HasLub Bool
+instance HasLub Ordering
 instance (HasLub a, HasLub b) => HasLub (Either a b)
 instance HasLub a => HasLub (Maybe a)
 instance HasLub a => HasLub [a]
+instance HasLub a => HasLub (ZipList a)
 
 instance (HasLub a, HasLub b) => HasLub (a,b)
 instance (HasLub a, HasLub b, HasLub c) => HasLub (a,b,c)
@@ -167,8 +190,22 @@ zip' (error "boom") [] :: [(Int,Int)]
 zip' [10,20] (1 : 2 : error "boom")
 zip' (1 : 2 : error "boom") [10,20]
 
--}
+Alternatively, we can avoid the constraints and partial matches
+by using lub only to (lazily) calculate the *length* of the
+result:
 
+fairZipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+fairZipWith' f as bs =
+  zipWith3
+    (const f)
+    (lub (zipWith discard as bs) (zipWith discard bs as))
+    as
+    bs
+  where
+    discard _ _ = ()
+
+Unlike zipWith, `flip . fairZipWith = fairZipWith . flip`.
+-}
 
 -- ------------------------
 -- Generic deriving
