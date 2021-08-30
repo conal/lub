@@ -224,19 +224,7 @@ zip' (1 : 2 : error "boom") [10,20]
 
 Alternatively, we can avoid the constraints and partial matches
 by using lub only to (lazily) calculate the *length* of the
-result:
-
-fairZipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-fairZipWith' f as bs =
-  zipWith3
-    (const f)
-    (lub (zipWith discard as bs) (zipWith discard bs as))
-    as
-    bs
-  where
-    discard _ _ = ()
-
-Unlike zipWith, `flip . fairZipWith = fairZipWith . flip`.
+result. See Data.Laxer.fairZipWith and fairZip.
 -}
 
 -- ------------------------

@@ -13,12 +13,17 @@
 -- See <http://conal.net/blog/posts/lazier-functional-programming-part-2/>
 ----------------------------------------------------------------------
 
-module Data.Laxer (eitherL,condL) where
+module Data.Laxer (eitherL,condL,foldrL,maybeL,fairZipWith, fairZip) where
 
 import Data.Lub
 import Data.Glb
 
--- | Laxer if-then-else, due to Luke Palmer
+-- | Laxer if-then-else, due to Luke Palmer.
+--
+-- @
+-- condL a a undefined = a
+-- condL (Left 3) (Left undefined) undefined = Left undefined
+-- @
 condL :: (HasLub a, HasGlb a) =>
          a -> a -> Bool -> a
 condL a b = const (a `glb` b) `lub` (\ c -> if c then a else b)
@@ -27,6 +32,40 @@ condL a b = const (a `glb` b) `lub` (\ c -> if c then a else b)
 eitherL :: (HasLub c, HasGlb c) =>
            (a -> c) -> (b -> c) -> (Either a b -> c)
 eitherL f g = const (f undefined `glb` g undefined) `lub` either f g
+
+-- | Laxer variant of 'maybe'
+maybeL :: (HasLub b, HasGlb b) =>
+           b -> (a -> b) -> (Maybe a -> b)
+maybeL n j = const (n `glb` j undefined) `lub` maybe n j
+
+-- | Laxer variant of 'foldr' for lists
+foldrL :: (HasLub b, HasGlb b) => (a -> b -> b) -> b -> [a] -> b
+foldrL c n = const fallback `lub` go
+  where
+    fallback = n `glb` c undefined undefined
+    go [] = n
+    go (x : xs) = c x $ fallback `lub` go xs
+
+-- | A version of 'zipWith' that succeeds if either list
+-- ends at the same time the other one bottoms out.
+--
+-- Laws:
+--
+-- > fairZipWith >= zipWith
+-- > flip . fairZipWith = fairZipWith . flip
+fairZipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+fairZipWith f as bs =
+  zipWith3
+    (const f)
+    (lub (zipWith discard as bs) (zipWith discard bs as))
+    as
+    bs
+  where
+    discard _ _ = ()
+
+-- | @fairZip = fairZipWith (,)@
+fairZip :: [a] -> [b] -> [(a, b)]
+fairZip = fairZipWith (,)
 
 {- -- Examples:
 
