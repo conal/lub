@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -30,7 +31,7 @@
 module Data.Lub
   ( 
   -- * Least upper bounds
-    HasLub(..), flatLub
+    HasLub(..), Lub(..), flatLub
   -- * Some useful special applications of 'lub'
   , parCommute, ptimes
   -- * Generic deriving
@@ -57,6 +58,7 @@ import qualified Data.Void as Void
 import qualified Data.Functor.Compose as Compose
 import qualified Data.Functor.Product as Product
 import qualified Data.Functor.Sum as Sum
+import qualified Data.Semigroup as Semigroup
 #endif
 #if MIN_VERSION_base(4,10,0)
 import Data.Type.Equality ((:~~:))
@@ -73,7 +75,37 @@ class HasLub a where
   lub = genericLub
   -- | n-ary 'lub'.  Defaults to @foldr lub undefined@
   lubs :: [a] -> a
+  -- Why not foldr1 lub? That would be cheaper, because it avoids
+  -- a call to `lub` with `undefined`. But it would be too strict:
+  -- lubs (3 : undefined) would be undefined when it should be 3.
   lubs = foldr lub undefined
+
+-- | The 'Semigroup.Semigroup' operation takes the
+-- least upper bound.
+newtype Lub a = Lub { getLub :: a }
+  deriving (Show, Read, Eq, Ord, Generic)
+
+instance HasLub a => HasLub (Lub a)
+
+#if MIN_VERSION_base(4,9,0)
+instance HasLub a => Semigroup.Semigroup (Lub a) where
+  Lub a <> Lub b = Lub (a `lub` b)
+  stimes = Semigroup.stimesIdempotent
+#endif
+
+instance HasLub a => Monoid (Lub a) where
+  mempty = undefined  -- This is actually the unit for Lub a!
+#if !MIN_VERSION_base(4,11,0)
+  Lub a `mappend` Lub b = Lub (a `lub` b)
+#endif
+
+instance Functor Lub where
+  fmap f (Lub a) = Lub (f a)
+instance Applicative Lub where
+  pure = Lub
+  Lub f <*> Lub a = Lub (f a)
+instance Monad Lub where
+  Lub a >>= f = f a
 
 -- | A 'lub' for flat domains.  Equivalent to 'unamb'.  Handy for defining
 -- 'HasLub' instances, e.g.,

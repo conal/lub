@@ -2,6 +2,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE PatternGuards #-}
@@ -46,6 +47,7 @@ import qualified Data.Void as Void
 import qualified Data.Functor.Compose as Compose
 import qualified Data.Functor.Product as Product
 import qualified Data.Functor.Sum as Sum
+import qualified Data.Semigroup as Semigroup
 #endif
 #if MIN_VERSION_base(4,10,0)
 import Data.Type.Equality ((:~~:))
@@ -65,6 +67,27 @@ class HasGlb a where
   -- have no unit for 'glb'.
   glbs1 :: [a] -> a
   glbs1 = foldr1 glb
+
+-- | The 'Semigroup.Semigroup' operation takes the
+-- greatest lower bound.
+newtype Glb a = Glb { getGlb :: a }
+  deriving (Show, Read, Eq, Ord, Generic)
+
+instance HasGlb a => HasGlb (Glb a)
+
+#if MIN_VERSION_base(4,9,0)
+instance HasGlb a => Semigroup.Semigroup (Glb a) where
+  Glb a <> Glb b = Glb (a `glb` b)
+  stimes = Semigroup.stimesIdempotent
+#endif
+
+instance Functor Glb where
+  fmap f (Glb a) = Glb (f a)
+instance Applicative Glb where
+  pure = Glb
+  Glb f <*> Glb a = Glb (f a)
+instance Monad Glb where
+  Glb a >>= f = f a
 
 -- | Bottom for a 'glb'.  In the form of @error \"glb: bottom (\<reason\>)\"@,
 -- though not really an error.
