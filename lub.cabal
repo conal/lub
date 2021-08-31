@@ -1,6 +1,6 @@
 Name:                lub
 Version:             0.1.8
-Cabal-Version:       >= 1.6
+Cabal-Version:       >= 1.10
 Synopsis:            information operators: least upper bound (lub) and greatest lower bound (glb)
 Category:            Concurrency, Data, Other
 Description:
