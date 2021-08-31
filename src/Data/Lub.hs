@@ -1,5 +1,17 @@
-{-# LANGUAGE TypeFamilies, FlexibleContexts #-}
--- {-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+#if __GLASGOW_HASKELL__ >= 708
+{-# LANGUAGE EmptyCase #-}
+{-# LANGUAGE PolyKinds #-} -- For instances
+#endif
 {-# OPTIONS_GHC -Wall #-}
 ----------------------------------------------------------------------
 -- |
@@ -19,17 +31,39 @@
 module Data.Lub
   ( 
   -- * Least upper bounds
-    HasLub(..), flatLub
+    HasLub(..), Lub(..), flatLub
   -- * Some useful special applications of 'lub'
   , parCommute, ptimes
+  -- * Generic deriving
+  , GHasLub
+  , genericLub
   ) where
 
-import Control.Applicative (liftA2)
+import Control.Applicative (liftA2, Const, ZipList)
 
 import Data.Unamb hiding (parCommute)
 -- import qualified Data.Unamb as Unamb
 
-import Data.Repr
+import GHC.Generics
+import qualified Data.Typeable as Typeable
+#if MIN_VERSION_base(4,7,0)
+import Data.Type.Equality ((:~:))
+import qualified Data.Proxy as Proxy
+#endif
+#if MIN_VERSION_base(4,8,0)
+import qualified Data.Functor.Identity as Identity
+import qualified Data.Void as Void
+#endif
+#if MIN_VERSION_base(4,9,0)
+import qualified Data.Functor.Compose as Compose
+import qualified Data.Functor.Product as Product
+import qualified Data.Functor.Sum as Sum
+import qualified Data.Semigroup as Semigroup
+#endif
+#if MIN_VERSION_base(4,10,0)
+import Data.Type.Equality ((:~~:))
+import qualified Type.Reflection as TR
+#endif
 
 -- | Types that support information merging ('lub')
 class HasLub a where
@@ -37,13 +71,41 @@ class HasLub a where
   -- each argument.  The arguments must be consistent, i.e., must have a
   -- common upper bound.
   lub  :: a -> a -> a
+  default lub :: (Generic a, GHasLub (Rep a)) => a -> a -> a
+  lub = genericLub
   -- | n-ary 'lub'.  Defaults to @foldr lub undefined@
   lubs :: [a] -> a
+  -- Why not foldr1 lub? That would be cheaper, because it avoids
+  -- a call to `lub` with `undefined`. But it would be too strict:
+  -- lubs (3 : undefined) would be undefined when it should be 3.
   lubs = foldr lub undefined
 
--- The following instance is wrong, since it lubs two undefineds to ().
--- 
--- instance HasLub () where _ `lub` _ = ()
+-- | The 'Semigroup.Semigroup' operation takes the
+-- least upper bound.
+newtype Lub a = Lub { getLub :: a }
+  deriving (Show, Read, Eq, Ord, Generic)
+
+instance HasLub a => HasLub (Lub a)
+
+#if MIN_VERSION_base(4,9,0)
+instance HasLub a => Semigroup.Semigroup (Lub a) where
+  Lub a <> Lub b = Lub (a `lub` b)
+  stimes = Semigroup.stimesIdempotent
+#endif
+
+instance HasLub a => Monoid (Lub a) where
+  mempty = undefined  -- This is actually the unit for Lub a!
+#if !MIN_VERSION_base(4,11,0)
+  Lub a `mappend` Lub b = Lub (a `lub` b)
+#endif
+
+instance Functor Lub where
+  fmap f (Lub a) = Lub (f a)
+instance Applicative Lub where
+  pure = Lub
+  Lub f <*> Lub a = Lub (f a)
+instance Monad Lub where
+  Lub a >>= f = f a
 
 -- | A 'lub' for flat domains.  Equivalent to 'unamb'.  Handy for defining
 -- 'HasLub' instances, e.g.,
@@ -55,89 +117,62 @@ flatLub :: a -> a -> a
 flatLub = unamb
 
 -- Flat types:
-instance HasLub ()      where lub = flatLub
-instance HasLub Bool    where lub = flatLub
 instance HasLub Char    where lub = flatLub
 instance HasLub Int     where lub = flatLub
 instance HasLub Integer where lub = flatLub
 instance HasLub Float   where lub = flatLub
 instance HasLub Double  where lub = flatLub
+#if MIN_VERSION_base(4,7,0)
+instance HasLub (a :~: b) where lub = flatLub
+#endif
+#if MIN_VERSION_base(4,10,0)
+instance HasLub (a :~~: b) where lub = flatLub
+instance HasLub (TR.TypeRep a) where lub = flatLub
+#endif
+instance HasLub Typeable.TypeRep where lub = flatLub
 -- ...
 
+-- Generic-derived types:
+instance HasLub ()
+#if MIN_VERSION_base(4,7,0)
+instance HasLub (Proxy.Proxy t)
+#endif
+instance HasLub Bool
+instance HasLub Ordering
+instance (HasLub a, HasLub b) => HasLub (Either a b)
+instance HasLub a => HasLub (Maybe a)
+instance HasLub a => HasLub [a]
+instance HasLub a => HasLub (ZipList a)
 
--- Lub on pairs
--- pairLub :: (HasLub a, HasLub b) =>
---            (a,b) -> (a,b) -> (a,b)
+instance (HasLub a, HasLub b) => HasLub (a,b)
+instance (HasLub a, HasLub b, HasLub c) => HasLub (a,b,c)
+instance (HasLub a, HasLub b, HasLub c, HasLub d) => HasLub (a,b,c,d)
+instance (HasLub a, HasLub b, HasLub c, HasLub d, HasLub e) => HasLub (a,b,c,d,e)
 
--- Too strict.  Bottom if one pair is bottom
+instance HasLub a => HasLub (Const a b)
 
--- instance (HasLub a, HasLub b) => HasLub (a,b) where
---   (a,b) `lub` (a',b') = (a `lub` a', b `lub` b')
+#if MIN_VERSION_base(4,8,0)
+instance HasLub a => HasLub (Identity.Identity a)
+instance HasLub Void.Void
+#endif
 
--- Too lazy.  Non-bottom even if both pairs are bottom
+-- People often use :+: and :*: rather than Sum and Product
+-- even outside of a Generic context.
+instance (HasLub (f a), HasLub (g a)) => HasLub ((f :*: g) a)
+instance (HasLub (f a), HasLub (g a)) => HasLub ((f :+: g) a)
 
--- instance (HasLub a, HasLub b) => HasLub (a,b) where
---   ~(a,b) `lub` ~(a',b') = (a `lub` a', b `lub` b')
+#if MIN_VERSION_base(4,9,0)
+instance HasLub (f (g a)) => HasLub (Compose.Compose f g a)
+instance (HasLub (f a), HasLub (g a)) => HasLub (Product.Product f g a)
+instance (HasLub (f a), HasLub (g a)) => HasLub (Sum.Sum f g a)
+#endif
 
-
-instance (HasLub a, HasLub b) => HasLub (a,b) where
-  ~p@(a,b) `lub` ~p'@(a',b') =
-     (definedP p `unamb` definedP p') `seq` (a `lub` a', b `lub` b')
-
-definedP :: (a,b) -> Bool
-definedP (_,_) = True
-
+-- Functions. This is not *strictly* correct, because it converts `undefined`
+-- into `const undefined`, but anyone who cares is doing something fishy
+-- anyway.
 instance HasLub b => HasLub (a -> b) where
   lub = liftA2 lub
-
--- f `lub` g = \ a -> f a `lub` g a
-
-instance (HasLub a, HasLub b) => HasLub (Either a b) where
-  s `lub` s' = if isL s `unamb` isL s' then
-                 Left  (outL s `lub` outL s')
-               else
-                 Right (outR s `lub` outR s')
-
-isL :: Either a b -> Bool
-isL = either (const True) (const False)
-
-outL :: Either a b -> a
-outL = either id (error "outL on Right")
-
-outR :: Either a b -> b
-outR = either (error "outR on Left") id
-
--- Generic case
---   instance (HasRepr t v, HasLub v) => HasLub t where lub = repLub
-
--- 'lub' on representations
-repLub :: (HasRepr a v, HasLub v) => a -> a -> a
-repLub = onRepr2 lub
-
--- instance (HasRepr t v, HasLub v) => HasLub t where
---   lub = repLub
-
--- For instance,
-instance HasLub a => HasLub (Maybe a) where lub = repLub
-instance HasLub a => HasLub [a]       where lub = repLub
-
-
-
--- a `repLub` a' = unrepr (repr a `lub` repr a')
-
-
-
-{-  -- Examples:
-
-(undefined,False) `lub` (True,undefined)
-
-(undefined,(undefined,False)) `lub` ((),(undefined,undefined)) `lub` (undefined,(True,undefined))
-
-Left () `lub` undefined :: Either () Bool
-
-[1,undefined,2] `lub` [undefined,3,2]
-
--}
+  -- f `lub` g = \ a -> f a `lub` g a
 
 -- | Turn a binary commutative operation into that tries both orders in
 -- parallel, 'lub'-merging the results.  Useful when there are special
@@ -187,4 +222,91 @@ zip' (error "boom") [] :: [(Int,Int)]
 zip' [10,20] (1 : 2 : error "boom")
 zip' (1 : 2 : error "boom") [10,20]
 
+Alternatively, we can avoid the constraints and partial matches
+by using lub only to (lazily) calculate the *length* of the
+result. See Data.Laxer.fairZipWith and fairZip.
 -}
+
+-- ------------------------
+-- Generic deriving
+
+-- | Used for generic deriving of 'HasLub'
+class GHasLub f where
+  -- Yes, this is an unusual type for the method of a class of Generic
+  -- representations. But we need to make decisions about what we do with `a`
+  -- itself based on what its representation looks like, and this seems
+  -- to be the simplest way to achieve that by far.
+  glub :: (Generic a, Rep a ~ f) => a -> a -> a
+
+-- | A suitable definition of 'lub' for instances of 'Generic'.
+genericLub :: (Generic a, GHasLub (Rep a)) => a -> a -> a
+-- What makes genericLub different from glub? When using
+-- TypeApplications, the first type argument of glub is
+-- the representation type; that's not very friendly.
+genericLub a b = glub a b
+
+-- Newtypes don't want their outsides forced/checked, because they don't have any.
+instance HasLub x => GHasLub (D1 ('MetaData _q _r _s 'True) (C1 _t (S1 _u (K1 _v x)))) where
+  glub a b
+    | M1 (M1 (M1 (K1 x))) <- from a
+    , M1 (M1 (M1 (K1 y))) <- from b
+    = to (M1 (M1 (M1 (K1 (lub x y)))))
+
+-- Not a newtype. First, we use 'unamb' to get the value in WHNF.
+-- We can then walk the generic representation of that WHNF value,
+-- setting up 'lub' computations using the actual values stored
+-- in the (generic representations of) the two argument values.
+instance GHasLub' f => GHasLub (D1 ('MetaData _q _r _s 'False) f) where
+  -- It turns out to be *really* helpful to use `unamb a b` here rather than
+  -- unamb (from a) (from b). Doing so gets us really clean Core without a
+  -- bunch of unnecessary generic conversions. Basically, we want to avoid
+  -- computing any generic representations within `unamb`, because nothing can
+  -- inline through that. An extra side benefit is that we can use the same
+  -- GHasLub instance for lifted unary tuples as for other non-newtype types,
+  -- which avoids a lot of mess.
+  glub a b
+    = to (M1 (glub' (unM1 (from ab)) ar br))
+    where
+      M1 ar = from a
+      M1 br = from b
+      -- We force ab here in case the type is a lifted unary tuple, in which case
+      -- its outside *won't* be forced by glub'.
+      !ab = a `unamb` b
+
+-- | Used for non-newtype 'Generic' deriving.
+class GHasLub' f where
+  -- | The first argument is used to get constructor
+  -- info. We are free to pattern match
+  -- on it all we like.
+  glub' :: f p -> f p -> f p -> f p
+
+instance GHasLub' f => GHasLub' (M1 i c f) where
+  glub' (M1 outer) (M1 l) (M1 r) = M1 (glub' outer l r)
+
+instance (GHasLub' f, GHasLub' g) => GHasLub' (f :+: g) where
+  glub' (L1 o) ~(L1 l1) ~(L1 l2) = L1 (glub' o l1 l2)
+  glub' (R1 o) ~(R1 r1) ~(R1 r2) = R1 (glub' o r1 r2)
+
+instance (GHasLub' f, GHasLub' g) => GHasLub' (f :*: g) where
+  -- We must pattern match strictly on the first argument, because
+  -- otherwise we'll end up with things like
+  --
+  --   lub @(a,b) undefined undefined = (undefined, undefined)
+  glub' (o1 :*: o2) ~(l1 :*: l2) ~(r1 :*: r2) =
+    glub' o1 l1 r1 :*: glub' o2 l2 r2
+
+instance GHasLub' U1 where
+  -- We pattern match strictly so we don't get
+  --
+  -- lub @() undefined undefined = ()
+  glub' U1 _ _ = U1
+
+instance GHasLub' V1 where
+#if __GLASGOW_HASKELL__ >= 708
+  glub' v _ _ = case v of
+#else
+  glub' !_ _ _ = error "Can't happen"
+#endif
+
+instance HasLub c => GHasLub' (K1 i c) where
+  glub' _ (K1 l) (K1 r) = K1 $ lub l r
